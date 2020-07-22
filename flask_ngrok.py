@@ -25,14 +25,14 @@ def _get_command():
         raise Exception("{system} is not supported".format(system=system))
     return command
 
-
+_cmd_options = []
 def _run_ngrok(port):
     command = _get_command()
     ngrok_path = str(Path(tempfile.gettempdir(), "ngrok"))
     _download_ngrok(ngrok_path)
     executable = str(Path(ngrok_path, command))
     os.chmod(executable, 0o777)
-    ngrok = subprocess.Popen([executable, 'http', str(port)])
+    ngrok = subprocess.Popen([executable, 'http', str(port)].append(_cmd_options))
     atexit.register(ngrok.terminate)
     localhost_url = "http://localhost:4040/api/tunnels"  # Url with tunnel details
     time.sleep(1)
@@ -40,7 +40,6 @@ def _run_ngrok(port):
     j = json.loads(tunnel_url)
 
     tunnel_url = j['tunnels'][0]['public_url']  # Do the parsing of the get
-    tunnel_url = tunnel_url.replace("https", "http")
     return tunnel_url
 
 
@@ -76,13 +75,15 @@ def start_ngrok(port):
     print(f" * Traffic stats available on http://127.0.0.1:4040")
 
 
-def run_with_ngrok(app):
+def run_with_ngrok(app, *args, **kwargs):
     """
     The provided Flask app will be securely exposed to the public internet via ngrok when run,
     and the its ngrok address will be printed to stdout
     :param app: a Flask application object
     :return: None
     """
+
+    _cmd_options = kwargs.get('cmd_options', [])
     old_run = app.run
 
     def new_run(*args, **kwargs):
