@@ -1,4 +1,4 @@
-import threading
+from threading import Timer
 from google.colab.output import eval_js
 
 def start_proxy(port):
@@ -25,7 +25,7 @@ def hook_proxy_helper(app, *args, **kwargs):
 
     def new_run(*args, **kwargs):
         port = kwargs.get('port', 5000)
-        thread = threading.Timer(1, start_proxy, args=(port,))
+        thread = Timer(1, start_proxy, args=(port,))
         thread.setDaemon(True)
         thread.start()
         old_run(*args, **kwargs)
